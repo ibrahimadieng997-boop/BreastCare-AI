@@ -1,6 +1,7 @@
 streamlit
 tensorflow
-numpy
-pandas
 opencv-python-headless
-Pillow
+pandas
+numpy
+pillow
+qrcode[pil]
