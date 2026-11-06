@@ -257,6 +257,7 @@ import os
 import base64
 import html as html_lib
 import hashlib
+import io
 import tempfile
 from datetime import date, datetime
 from pathlib import Path
@@ -458,6 +459,358 @@ def show_vega(spec):
         st.vega_lite_chart(spec=spec, **FIT)
     except TypeError:
         st.vega_lite_chart(spec=spec, use_container_width=True)
+
+
+# ============================================================
+# 2b. PROFIL PROFESSIONNEL (données, QR code, CV recruteur)
+# ============================================================
+
+PROFILE_PHOTO = BASE_DIR / "profil_ibrahima.jpg"
+
+PROFILE = {
+    "name": "Ibrahima DIENG",
+    "title": "Junior Data Scientist & Analyste de Données",
+    "subtitle": "Statistique et Intelligence Artificielle",
+    "phone": "+221 77 282 92 34",
+    "phone_raw": "+221772829234",
+    "email": "ibrahimadieng997@gmail.com",
+    "github": "github.com/ibrahimadieng997-boop",
+    "github_url": "https://github.com/ibrahimadieng997-boop",
+    "location": "Thiès, Sénégal",
+    "summary": (
+        "Titulaire d’une licence en Statistique et Informatique "
+        "Décisionnelle (UADB), je poursuis actuellement une formation "
+        "en Data Science et Intelligence Artificielle au Dakar Institute "
+        "of Technology (niveau équivalent Master 1). Je mobilise mes "
+        "compétences en analyse statistique, Python, R, SQL, Machine "
+        "Learning et Deep Learning pour transformer les données en "
+        "informations exploitables, développer des modèles prédictifs "
+        "et concevoir des tableaux de bord interactifs avec Power BI, "
+        "afin de soutenir la prise de décision."
+    ),
+    "projects": [
+        ("Statistique univariée et bivariée", [
+            "Analyse exploratoire et traitement de données en santé "
+            "mentale : étude du score de dépendance (SDS), qui mesure "
+            "la gravité de la dépendance à une drogue ou à une "
+            "substance psychoactive.",
+            "Analyse univariée (distribution et dispersion des variables "
+            "quantitatives) et analyse bivariée (corrélations entre "
+            "variables, tests statistiques).",
+        ]),
+        ("Statistique inférentielle", [
+            "Prédiction des émissions de CO2 d’un véhicule à partir des "
+            "caractéristiques du moteur et de la consommation, par "
+            "régression linéaire simple et multiple.",
+        ]),
+        ("Machine Learning", [
+            "Marketing bancaire : prédiction de la souscription d’un "
+            "dépôt à terme par les clients.",
+            "Segmentation de patients : identification des patients "
+            "seniors fortement hospitalisés, des patients obèses "
+            "fumeurs et des patients adultes en suivi.",
+            "Prédiction de l’état de véhicules (« venant » ou "
+            "d’occasion) du site CoinAfrique à partir du prix, de "
+            "l’année, de la transmission et du lieu de stationnement.",
+        ]),
+        ("Deep Learning", [
+            "Prédiction de la progression du diabète par perceptron "
+            "simple et multicouche : jeu de données Diabetes "
+            "(scikit-learn, 442 patients, 10 variables).",
+            "Prétraitement des données : séparation train/test et "
+            "normalisation (StandardScaler).",
+            "Implémentation d’un perceptron simple puis d’un perceptron "
+            "multicouche (MLP) en Python, avec descente de gradient et "
+            "rétropropagation.",
+        ]),
+    ],
+    "skills": [
+        ("LANGAGES & ENVIRONNEMENTS", [
+            "Python", "R", "SQL", "HTML/CSS",
+            "Jupyter Notebook", "Google Colab"]),
+        ("MACHINE LEARNING & DEEP LEARNING", [
+            "Statistique", "Apprentissage supervisé",
+            "Apprentissage non supervisé", "Apprentissage profond",
+            "scikit-learn", "NumPy", "Pandas", "TensorFlow", "Keras"]),
+        ("ANALYSE & VISUALISATION", [
+            "Power BI", "Tableau Desktop", "Excel", "Streamlit",
+            "Seaborn", "Matplotlib"]),
+        ("BASES DE DONNÉES & MODÉLISATION", [
+            "PostgreSQL", "PowerAMC"]),
+        ("COLLECTE & DATA ENGINEERING", [
+            "Web scraping", "BeautifulSoup", "Selenium", "BrowserFlow",
+            "Web Scraper", "Apify", "Stockage Cloud (en cours)"]),
+        ("BUREAUTIQUE", ["Word", "PowerPoint"]),
+    ],
+    "education": [
+        ("Licence 3 en Statistique et Informatique Décisionnelle "
+         "(SID) – Diplômé", "Université Alioune Diop de Bambey "
+         "(UADB), Bambey", "2022 – 2023", False),
+        ("Licence 2 en Statistique et Informatique Décisionnelle (SID)",
+         "Université Alioune Diop de Bambey (UADB), Bambey",
+         "2021 – 2022", False),
+        ("Licence 1 en Mathématiques, Physique, Chimie et Informatique "
+         "(MPCI)", "Mathématiques, Physique, Chimie, Informatique",
+         "2020 – 2021", False),
+        ("Baccalauréat S2 – Mention Assez Bien",
+         "Lycée de Rao, Saint-Louis, Sénégal", "2019 – 2020", False),
+    ],
+    "certs": [
+        ("Certification en Data Science et IA – En cours",
+         "Dakar Institute of Technology (École de l’Intelligence "
+         "Artificielle), Dakar", "2025 – 2026", True),
+        ("Certificat de Data Analyst",
+         "Xarala Académie, Cité Damel", "2025 – 2026", False),
+        ("Attestation de travail",
+         "Centre de Santé Mentale Dalal Xel, Thiès", "2022 – 2023",
+         False),
+    ],
+    "community_org": "Mister Bane Center",
+    "community_role": "Membre actif – Actions humanitaires (en cours)",
+    "community": [
+        "Aide matérielle : achat et distribution de chaussures, de "
+        "vêtements et de produits de première nécessité aux talibés "
+        "(enfants en situation de vulnérabilité).",
+        "Accompagnement social et moral : écoute, conseil et "
+        "orientation des enfants.",
+        "Journées solidaires : organisation d’actions pour améliorer "
+        "leur quotidien (repas, hygiène, sensibilisation).",
+    ],
+    "languages": ["Wolof", "Français", "Anglais"],
+    "interests": ["Musique", "Cinéma", "Sport", "Lecture", "Jeux"],
+}
+
+
+def _e(value):
+    return html_lib.escape(str(value))
+
+
+def make_qr_uri(text, dark="#082B49", scale=8):
+    """QR code en SVG (data URI). Nécessite le paquet 'segno'."""
+    try:
+        import segno
+    except ImportError:
+        return ""
+
+    buffer = io.BytesIO()
+    segno.make(text, error="m").save(
+        buffer,
+        kind="svg",
+        scale=scale,
+        border=2,
+        dark=dark,
+        light="#FFFFFF",
+        xmldecl=False
+    )
+    encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    return f"data:image/svg+xml;base64,{encoded}"
+
+
+def build_vcard():
+    """Carte de contact vCard 3.0 (lue directement par les téléphones)."""
+    p = PROFILE
+    return "\r\n".join([
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        "N:DIENG;Ibrahima;;;",
+        "FN:Ibrahima DIENG",
+        "TITLE:Data Scientist Junior",
+        f"TEL:{p['phone_raw']}",
+        f"EMAIL:{p['email']}",
+        f"URL:{p['github_url']}",
+        "END:VCARD",
+        ""
+    ])
+
+
+def build_cv_html(photo_uri, qr_uri):
+    """CV recruteur autonome (HTML), imprimable en PDF (A4)."""
+    p = PROFILE
+
+    photo = (
+        f'<img src="{photo_uri}" alt="Photo">'
+        if photo_uri else '<div class="ini">ID</div>'
+    )
+
+    qr = (
+        f'<div class="qr"><img src="{qr_uri}" alt="QR code">'
+        f'<span>Scannez pour ouvrir le profil</span></div>'
+        if qr_uri else ""
+    )
+
+    skills = "".join(
+        f'<div class="sg"><div class="st">{_e(t)}</div>'
+        + "".join(f'<span class="tag">{_e(i)}</span>' for i in items)
+        + "</div>"
+        for t, items in p["skills"]
+    )
+
+    projects = "".join(
+        f'<div class="pj"><b>{_e(t)}</b><ul>'
+        + "".join(f"<li>{_e(i)}</li>" for i in items)
+        + "</ul></div>"
+        for t, items in p["projects"]
+    )
+
+    def timeline(rows):
+        return "".join(
+            f'<div class="tl{" now" if now else ""}">'
+            f'<div class="tt">{_e(t)}</div>'
+            f'<div class="ts">{_e(s)} · <b>{_e(d)}</b></div></div>'
+            for t, s, d, now in rows
+        )
+
+    community = "".join(f"<li>{_e(i)}</li>" for i in p["community"])
+
+    css = """
+    *{box-sizing:border-box}
+    body{margin:0;background:#E9F1F9;font-family:'DM Sans','Segoe UI',Arial,sans-serif;color:#103B60}
+    .page{width:210mm;min-height:297mm;margin:12px auto;background:#fff;display:flex;box-shadow:0 10px 40px rgba(8,43,73,.25)}
+    .side{width:72mm;background:linear-gradient(180deg,#061F38,#0A3A63 70%,#1769AA);color:#fff;padding:26px 20px}
+    .main{flex:1;padding:30px 30px 26px}
+    .ph{position:relative;width:150px;height:150px;margin:0 auto 18px}
+    .ph:before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(#1769AA,#29B6F6,#FFD23F,#F5B700,#1769AA)}
+    .ph img,.ini{position:absolute;inset:7px;width:136px;height:136px;border-radius:50%;object-fit:cover;border:4px solid #fff;background:#0A3A63;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:800}
+    .side h3{font-size:10.5px;letter-spacing:2px;color:#FFD23F;margin:20px 0 8px;border-bottom:1px solid rgba(255,255,255,.25);padding-bottom:5px}
+    .side p{font-size:11.5px;margin:5px 0;word-break:break-all;line-height:1.45}
+    .tag{display:inline-block;font-size:10px;font-weight:700;border-radius:999px;padding:3px 9px;margin:0 4px 5px 0;background:#EAF4FC;color:#103B60;border:1px solid #CFE2F3}
+    .side .tag{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.28)}
+    .qr{margin-top:20px;text-align:center;background:#fff;border-radius:14px;padding:12px}
+    .qr img{width:100%;max-width:150px}
+    .qr span{display:block;font-size:9.5px;color:#61758B;margin-top:4px}
+    h1{margin:0;font-size:34px;letter-spacing:-1px;color:#082B49;line-height:1.05}
+    h1 span{color:#D5A00A}
+    .role{font-size:14.5px;font-weight:700;color:#1769AA;margin:7px 0 0}
+    .sub{font-size:11px;letter-spacing:1.8px;color:#B18A40;font-weight:800;margin-top:4px}
+    h2{font-size:12px;letter-spacing:2px;color:#082B49;margin:20px 0 9px;display:flex;align-items:center;gap:10px}
+    h2:after{content:"";flex:1;height:2px;background:linear-gradient(90deg,#D5AE61,transparent)}
+    .sum{font-size:12px;line-height:1.65;color:#2C4A66;margin:0}
+    .pj{border-left:3px solid #1769AA;background:#F1F7FD;padding:7px 11px;margin-bottom:7px;border-radius:0 8px 8px 0}
+    .pj b{font-size:12px;color:#082B49}
+    .pj ul{margin:3px 0 0;padding-left:15px;font-size:10.8px;line-height:1.5;color:#34506B}
+    .tl{margin-bottom:8px;padding-left:12px;border-left:2px solid #CFE2F3}
+    .tl.now{border-left-color:#F5B700}
+    .tt{font-size:12px;font-weight:800;color:#082B49}
+    .ts{font-size:10.8px;color:#61758B}
+    .ts b{color:#1769AA}
+    ul.cm{margin:0;padding-left:16px;font-size:10.8px;line-height:1.55;color:#34506B}
+    .bar{position:fixed;top:12px;right:16px}
+    .bar button{background:#082B49;color:#fff;border:1px solid #D5AE61;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer}
+    @media print{body{background:#fff}.page{margin:0;box-shadow:none}.bar{display:none}
+      *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    @page{size:A4;margin:0}
+    """
+
+    return f"""<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>CV – {_e(p['name'])}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>{css}</style></head>
+<body>
+<div class="bar"><button onclick="window.print()">Imprimer / Enregistrer en PDF</button></div>
+<div class="page">
+  <aside class="side">
+    <div class="ph">{photo}</div>
+    <h3>CONTACT</h3>
+    <p>📞 {_e(p['phone'])}</p>
+    <p>✉️ {_e(p['email'])}</p>
+    <p>🔗 {_e(p['github'])}</p>
+    <p>📍 {_e(p['location'])}</p>
+    <h3>COMPÉTENCES</h3>{skills}
+    <h3>LANGUES</h3>
+    <p>{_e(' · '.join(p['languages']))}</p>
+    <h3>CENTRES D’INTÉRÊT</h3>
+    <p>{_e(' · '.join(p['interests']))}</p>
+    {qr}
+  </aside>
+  <main class="main">
+    <h1>IBRAHIMA <span>DIENG</span></h1>
+    <div class="role">{_e(p['title'])}</div>
+    <div class="sub">{_e(p['subtitle'].upper())}</div>
+    <h2>RÉSUMÉ PROFESSIONNEL</h2>
+    <p class="sum">{_e(p['summary'])}</p>
+    <h2>PROJETS ACADÉMIQUES</h2>{projects}
+    <h2>FORMATION</h2>{timeline(p['education'])}
+    <h2>CERTIFICATIONS &amp; ATTESTATIONS</h2>{timeline(p['certs'])}
+    <h2>ENGAGEMENT COMMUNAUTAIRE</h2>
+    <div class="tt">{_e(p['community_org'])}</div>
+    <div class="ts" style="margin-bottom:5px">{_e(p['community_role'])}</div>
+    <ul class="cm">{community}</ul>
+  </main>
+</div>
+</body></html>"""
+
+
+PROFILE_CSS = """
+<style>
+.pf-hero{display:flex;align-items:center;gap:40px;margin-top:18px;padding:40px 46px;border-radius:26px;position:relative;overflow:hidden;
+    background:linear-gradient(120deg,#061F38,#0A3A63 55%,#1769AA);border:1px solid rgba(213,174,97,.55);box-shadow:0 18px 45px rgba(10,48,80,.22)}
+.pf-hero:after{content:"";position:absolute;right:-90px;top:-90px;width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.14),transparent 65%)}
+.pf-photo{position:relative;flex:0 0 auto;width:208px;height:208px;z-index:1}
+.pf-ring{position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(#1769AA,#29B6F6,#FFD23F,#F5B700,#1769AA);
+    animation:pf-spin 7s linear infinite;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.pf-photo img,.pf-initials{position:absolute;inset:9px;width:calc(100% - 18px);height:calc(100% - 18px);border-radius:50%;
+    object-fit:cover;border:5px solid #fff;background:#0A3A63;box-sizing:border-box}
+.pf-initials{display:flex;align-items:center;justify-content:center;color:#fff;font-size:56px;font-weight:800}
+@keyframes pf-spin{to{transform:rotate(360deg)}}
+.pf-id{position:relative;z-index:1}
+.pf-kicker{color:#D5AE61;font-size:12px;font-weight:800;letter-spacing:2.4px}
+.pf-name{color:#fff;font-size:54px;font-weight:800;letter-spacing:-1.8px;line-height:1.02;margin-top:10px}
+.pf-name span{color:#FFD23F}
+.pf-title{color:#D2E6F5;font-size:19px;font-weight:600;margin-top:12px}
+.pf-badge{display:inline-block;margin-top:14px;background:rgba(255,210,63,.14);border:1px solid rgba(255,210,63,.55);color:#FFE27A;
+    border-radius:999px;padding:6px 14px;font-size:12px;font-weight:800;letter-spacing:.8px}
+.pf-chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pf-chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.26);color:#fff !important;border-radius:999px;
+    padding:8px 15px;font-size:13px;font-weight:600;text-decoration:none !important}
+a.pf-chip:hover{background:#1769AA}
+.pf-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:22px 0}
+.pf-stat{background:#fff;border:1px solid var(--border);border-top:4px solid var(--blue);border-radius:16px;padding:16px 18px;box-shadow:0 7px 23px rgba(25,75,120,.06)}
+.pf-stat:nth-child(even){border-top-color:#F5B700}
+.pf-stat b{display:block;font-size:28px;color:var(--navy);font-weight:800;line-height:1.1}
+.pf-stat span{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.4px}
+.pf-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:24px 26px;margin-bottom:20px;box-shadow:0 7px 23px rgba(25,75,120,.06)}
+.pf-h{display:flex;align-items:center;gap:10px;color:var(--navy);font-size:17px;font-weight:800;margin-bottom:15px}
+.pf-h:after{content:"";flex:1;height:2px;background:linear-gradient(90deg,#D5AE61,transparent)}
+.pf-ico{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;
+    background:linear-gradient(135deg,#E7F3FD,#D6EAFB);border:1px solid #C9E0F3;font-size:17px}
+.pf-sum{color:#2C4A66;line-height:1.8;font-size:15px}
+.pf-proj{border-left:4px solid var(--blue);background:var(--light);border-radius:0 12px 12px 0;padding:13px 17px;margin-bottom:12px}
+.pf-proj b{color:var(--navy);display:block;margin-bottom:5px}
+.pf-proj ul,.pf-list{margin:0;padding-left:19px;color:#34506B;font-size:13.5px;line-height:1.7}
+.pf-tl{border-left:2px solid #CFE2F3;margin-left:6px;padding-left:22px}
+.pf-tl-i{position:relative;margin-bottom:17px}
+.pf-tl-i:before{content:"";position:absolute;left:-31px;top:4px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--blue)}
+.pf-tl-i.now:before{border-color:#F5B700;background:#FFD23F}
+.pf-tl-t{font-weight:800;color:var(--navy);font-size:14.5px}
+.pf-tl-s{color:var(--muted);font-size:12.5px;margin-top:2px}
+.pf-tl-d{display:inline-block;background:var(--light);color:var(--blue);font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 11px;margin-top:5px}
+.pf-sk-t{font-size:11px;font-weight:800;letter-spacing:1.6px;color:#B18A40;margin:4px 0 8px}
+.pf-tag{display:inline-block;background:var(--light);border:1px solid #CFE2F3;color:var(--dark);border-radius:999px;
+    padding:5px 12px;font-size:12.5px;font-weight:700;margin:0 6px 7px 0}
+.pf-org{font-weight:800;color:var(--navy);font-size:15px}
+.pf-role{color:#B18A40;font-weight:800;font-size:12px;letter-spacing:.8px;margin:2px 0 9px}
+.pf-scan{border-radius:22px;padding:30px 36px;margin:6px 0 20px;color:#fff;
+    background:linear-gradient(110deg,#061F38,#0A3A63 60%,#0D4570);border:1px solid rgba(213,174,97,.5);box-shadow:0 18px 45px rgba(10,48,80,.15)}
+.pf-scan .pf-kicker{margin-bottom:8px}
+.pf-scan-t{font-size:30px;font-weight:800;letter-spacing:-.8px}
+.pf-scan p{color:#D2E6F5;line-height:1.7;margin:8px 0 0;max-width:760px}
+.pf-qr{text-align:center;background:#fff;border:1px solid var(--border);border-radius:20px;padding:24px 18px;box-shadow:0 7px 23px rgba(25,75,120,.06)}
+.pf-qr img{width:240px;max-width:100%;padding:10px;border:4px solid transparent;border-radius:20px;
+    background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,#1769AA,#FFD23F) border-box}
+.pf-qr b{display:block;color:var(--navy);font-size:16px;margin-top:14px}
+.pf-qr span{color:var(--muted);font-size:12.5px;line-height:1.5}
+@media (max-width:900px){
+ .pf-hero{flex-direction:column;text-align:center;padding:32px 22px}
+ .pf-chips{justify-content:center}
+ .pf-name{font-size:38px}
+ .pf-stats{grid-template-columns:repeat(2,1fr)}
+}
+@media (prefers-reduced-motion:reduce){.pf-ring{animation:none}}
+</style>
+"""
 
 
 # ============================================================
@@ -1034,6 +1387,17 @@ header[data-testid="stHeader"] { background: transparent; }
 </style>
 """
 
+# Lien direct (QR code) : https://votre-app/?page=profil
+try:
+    if (
+        st.query_params.get("page", "").lower() == "profil"
+        and not st.session_state.get("_deeplink_done")
+    ):
+        st.session_state["navigation"] = "Profil"
+        st.session_state["_deeplink_done"] = True
+except Exception:
+    pass
+
 if st.session_state.get("navigation", "Accueil") == "Accueil":
     st.markdown(HOME_CSS, unsafe_allow_html=True)
 
@@ -1325,7 +1689,8 @@ pages = [
     "Analyse IA",
     "Patients",
     "Rapports",
-    "À propos"
+    "À propos",
+    "Profil"
 ]
 
 PAGE_LABELS = {
@@ -1334,7 +1699,8 @@ PAGE_LABELS = {
     "Analyse IA": "Analyse IA",
     "Patients": "Les patients",
     "Rapports": "Rapports",
-    "À propos": "À propos de"
+    "À propos": "À propos de",
+    "Profil": "Profil"
 }
 
 render("""
@@ -2457,6 +2823,239 @@ elif page == "À propos":
 
     </div>
     """)
+
+
+# ============================================================
+# 15b. PAGE PROFIL (recruteurs)
+# ============================================================
+
+elif page == "Profil":
+
+    p = PROFILE
+    st.markdown(PROFILE_CSS, unsafe_allow_html=True)
+
+    photo_uri = hero_data_uri(PROFILE_PHOTO)
+
+    if photo_uri:
+        photo_html = f'<img src="{photo_uri}" alt="Ibrahima DIENG">'
+    else:
+        photo_html = '<div class="pf-initials">ID</div>'
+        st.warning(
+            "Photo introuvable : placez profil_ibrahima.jpg "
+            "à côté de app.py."
+        )
+
+    # ---------- En-tête ----------
+    render(f"""
+    <div class="pf-hero">
+        <div class="pf-photo">
+            <div class="pf-ring"></div>
+            {photo_html}
+        </div>
+        <div class="pf-id">
+            <div class="pf-kicker">PROFIL PROFESSIONNEL · DATA SCIENCE &amp; IA</div>
+            <div class="pf-name">IBRAHIMA <span>DIENG</span></div>
+            <div class="pf-title">{_e(p['title'])}</div>
+            <div class="pf-badge">M1 DATA SCIENCE &amp; IA · DAKAR INSTITUTE OF TECHNOLOGY</div>
+            <div class="pf-chips">
+                <a class="pf-chip" href="tel:{_e(p['phone_raw'])}">📞 {_e(p['phone'])}</a>
+                <a class="pf-chip" href="mailto:{_e(p['email'])}">✉️ {_e(p['email'])}</a>
+                <a class="pf-chip" href="{_e(p['github_url'])}" target="_blank" rel="noopener">🔗 {_e(p['github'])}</a>
+                <span class="pf-chip">📍 {_e(p['location'])}</span>
+            </div>
+        </div>
+    </div>
+    """)
+
+    # ---------- Chiffres clés ----------
+    n_tools = len({i for _, items in p["skills"] for i in items})
+
+    render(f"""
+    <div class="pf-stats">
+        <div class="pf-stat"><b>Licence SID</b><span>DIPLÔMÉ · 2023</span></div>
+        <div class="pf-stat"><b>Master 1</b><span>ÉQUIVALENT · EN COURS</span></div>
+        <div class="pf-stat"><b>{len(p['projects'])} domaines</b><span>PROJETS ACADÉMIQUES</span></div>
+        <div class="pf-stat"><b>{n_tools}</b><span>OUTILS &amp; TECHNOLOGIES</span></div>
+    </div>
+    """)
+
+    # ---------- Contenu du CV ----------
+    left, right = st.columns([1.55, 1], gap="large")
+
+    with left:
+
+        render(f"""
+        <div class="pf-card">
+            <div class="pf-h"><span class="pf-ico">👤</span>Résumé professionnel</div>
+            <div class="pf-sum">{_e(p['summary'])}</div>
+        </div>
+        """)
+
+        projects_html = "".join(
+            f'<div class="pf-proj"><b>{_e(t)}</b><ul>'
+            + "".join(f"<li>{_e(i)}</li>" for i in items)
+            + "</ul></div>"
+            for t, items in p["projects"]
+        )
+
+        render(f"""
+        <div class="pf-card">
+            <div class="pf-h"><span class="pf-ico">🧪</span>Projets académiques</div>
+            {projects_html}
+        </div>
+        """)
+
+        edu_html = "".join(
+            f'<div class="pf-tl-i{" now" if now else ""}">'
+            f'<div class="pf-tl-t">{_e(t)}</div>'
+            f'<div class="pf-tl-s">{_e(s)}</div>'
+            f'<span class="pf-tl-d">{_e(d)}</span></div>'
+            for t, s, d, now in p["education"]
+        )
+
+        render(f"""
+        <div class="pf-card">
+            <div class="pf-h"><span class="pf-ico">🎓</span>Formation</div>
+            <div class="pf-tl">{edu_html}</div>
+        </div>
+        """)
+
+    with right:
+
+        skills_html = "".join(
+            f'<div class="pf-sk-t">{_e(t)}</div>'
+            + "".join(f'<span class="pf-tag">{_e(i)}</span>' for i in items)
+            for t, items in p["skills"]
+        )
+
+        render(f"""
+        <div class="pf-card">
+            <div class="pf-h"><span class="pf-ico">⚙️</span>Compétences techniques</div>
+            {skills_html}
+        </div>
+        """)
+
+        cert_html = "".join(
+            f'<div class="pf-tl-i{" now" if now else ""}">'
+            f'<div class="pf-tl-t">{_e(t)}</div>'
+            f'<div class="pf-tl-s">{_e(s)}</div>'
+            f'<span class="pf-tl-d">{_e(d)}</span></div>'
+            for t, s, d, now in p["certs"]
+        )
+
+        render(f"""
+        <div class="pf-card">
+            <div class="pf-h"><span class="pf-ico">🏅</span>Certifications</div>
+            <div class="pf-tl">{cert_html}</div>
+        </div>
+        """)
+
+        community_html = "".join(
+            f"<li>{_e(i)}</li>" for i in p["community"]
+        )
+
+        render(f"""
+        <div class="pf-card">
+            <div class="pf-h"><span class="pf-ico">🤝</span>Engagement social</div>
+            <div class="pf-org">{_e(p['community_org'])}</div>
+            <div class="pf-role">{_e(p['community_role']).upper()}</div>
+            <ul class="pf-list">{community_html}</ul>
+        </div>
+        """)
+
+        langs_html = "".join(
+            f'<span class="pf-tag">{_e(i)}</span>' for i in p["languages"]
+        )
+        interests_html = "".join(
+            f'<span class="pf-tag">{_e(i)}</span>' for i in p["interests"]
+        )
+
+        render(f"""
+        <div class="pf-card">
+            <div class="pf-h"><span class="pf-ico">🌍</span>Langues &amp; intérêts</div>
+            <div class="pf-sk-t">LANGUES</div>{langs_html}
+            <div class="pf-sk-t">CENTRES D'INTÉRÊT</div>{interests_html}
+        </div>
+        """)
+
+    # ---------- Scanner recruteur ----------
+    render("""
+    <div class="pf-scan">
+        <div class="pf-kicker">SCANNER RECRUTEUR</div>
+        <div class="pf-scan-t">Scannez le profil, retrouvez le CV</div>
+        <p>
+            Le recruteur pointe l'appareil photo de son téléphone vers un
+            QR code : il enregistre directement le contact ou ouvre le profil
+            en ligne.
+        </p>
+    </div>
+    """)
+
+    profile_url = st.text_input(
+        "Lien encodé dans le QR code « Profil en ligne »",
+        value=st.session_state.get("pf_url", p["github_url"]),
+        key="pf_url",
+        help=(
+            "Une fois l'application déployée, collez ici son adresse "
+            "suivie de ?page=profil : le QR code ouvrira directement "
+            "cette page."
+        )
+    ).strip() or p["github_url"]
+
+    qr_contact = make_qr_uri(build_vcard())
+    qr_online = make_qr_uri(profile_url, dark="#1769AA")
+
+    if not qr_contact:
+        st.warning(
+            "Le module de QR code est absent : installez-le avec "
+            "« pip install segno » puis relancez l'application."
+        )
+    else:
+        qa, qb = st.columns(2, gap="large")
+
+        with qa:
+            render(f"""
+            <div class="pf-qr">
+                <img src="{qr_contact}" alt="QR code contact">
+                <b>Carte de contact</b>
+                <span>Fonctionne hors ligne : nom, téléphone, e-mail et GitHub
+                s'ajoutent aux contacts du téléphone.</span>
+            </div>
+            """)
+
+        with qb:
+            render(f"""
+            <div class="pf-qr">
+                <img src="{qr_online}" alt="QR code profil en ligne">
+                <b>Profil en ligne</b>
+                <span>{_e(profile_url)}</span>
+            </div>
+            """)
+
+    st.write("")
+
+    cv_html = build_cv_html(photo_uri, qr_online)
+
+    d1, d2 = st.columns(2, gap="large")
+
+    with d1:
+        st.download_button(
+            "📄 Télécharger le CV (imprimable en PDF)",
+            data=cv_html.encode("utf-8"),
+            file_name="CV_Ibrahima_DIENG.html",
+            mime="text/html",
+            **FIT
+        )
+
+    with d2:
+        st.download_button(
+            "📇 Enregistrer le contact (.vcf)",
+            data=build_vcard().encode("utf-8"),
+            file_name="Ibrahima_DIENG.vcf",
+            mime="text/vcard",
+            **FIT
+        )
+
 
 
 # ============================================================
