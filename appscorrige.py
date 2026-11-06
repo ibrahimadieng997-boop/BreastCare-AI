@@ -253,6 +253,261 @@
 # Fin 
 # Fin conserver
 
+# import os, tempfile
+# from datetime import date, datetime
+# import numpy as np
+# import pandas as pd
+# import streamlit as st
+# import tensorflow as tf
+# from PIL import Image
+# import cv2
+# from tensorflow.keras.applications.vgg16 import preprocess_input
+
+# st.set_page_config(page_title="BreastCare AI", page_icon="🩺", layout="wide")
+
+# st.markdown("""
+# <style>
+# @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap');
+# .stApp{background:linear-gradient(135deg,#0b111b,#142235);color:#f3f6fb;font-family:'DM Sans',sans-serif}
+# [data-testid="stSidebar"]{background:#111b2a;border-right:1px solid #29394d}
+# .block-container{max-width:1450px;padding-top:1.4rem}
+# h1,h2,h3{color:#f6f8fc}
+# div[data-testid="stMetric"]{background:#1c2a3d;border:1px solid #30445e;padding:16px;border-radius:15px}
+# .stButton>button{background:#1c3552;color:white;border:1px solid #42658b;border-radius:10px;font-weight:700}
+# .stButton>button:hover{background:#244b73;color:white;border-color:#56a5ff}
+# .hero{padding:38px;border-radius:22px;min-height:330px;background:linear-gradient(90deg,rgba(7,14,24,.96),rgba(7,14,24,.76),rgba(7,14,24,.2)),url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1800&q=85') center/cover;border:1px solid #34465b}
+# .hero h1{font-size:42px;line-height:1.1}.hero p{max-width:620px;color:#d6e0ed;font-size:16px;line-height:1.7}
+# .panel{background:#1a2738;border:1px solid #304258;border-radius:16px;padding:18px}
+# .muted{color:#9eafc4}.alert{background:#3a2029;border:1px solid #8c3d4c;padding:14px;border-radius:12px;color:#ffe0e4}
+# .info{background:#172f49;border:1px solid #315d86;padding:14px;border-radius:12px;color:#dceeff}
+# .card{background:#1a2738;border:1px solid #304258;border-radius:16px;padding:18px;min-height:170px}
+# .small{font-size:11px;letter-spacing:1.5px;color:#72c7e5;font-weight:800}
+# </style>
+# """, unsafe_allow_html=True)
+
+# if "page" not in st.session_state: st.session_state.page="Accueil"
+# if "records" not in st.session_state: st.session_state.records=[]
+# if "last" not in st.session_state: st.session_state.last=None
+# if "model_file" not in st.session_state: st.session_state.model_file=None
+
+# @st.cache_resource
+# def load_model(path):
+#     return tf.keras.models.load_model(path)
+
+# def gradcam(model, batch, class_idx):
+#     base=model.layers[0]
+#     conv=base.get_layer("block5_conv3")
+#     conv_model=tf.keras.Model(base.input,conv.output)
+#     with tf.GradientTape() as tape:
+#         activations=conv_model(batch,training=False)
+#         tape.watch(activations)
+#         x=activations
+#         for layer in model.layers[1:]:
+#             x=layer(x,training=False) if isinstance(layer,tf.keras.layers.Dropout) else layer(x)
+#         score=x[:,class_idx]
+#     grads=tape.gradient(score,activations)
+#     weights=tf.reduce_mean(grads,axis=(0,1,2))
+#     heat=tf.reduce_sum(activations[0]*weights,axis=-1)
+#     heat=tf.maximum(heat,0)
+#     heat=heat/(tf.reduce_max(heat)+1e-8)
+#     return heat.numpy()
+
+# def prep(image):
+#     im=image.convert("RGB").resize((224,224))
+#     arr=np.asarray(im,dtype=np.float32)
+#     batch=preprocess_input(arr.copy())[None,...]
+#     return batch,arr.astype(np.uint8)
+
+# def overlay_gradcam(original,heat,alpha=.4):
+#     h,w=original.shape[:2]
+#     heat=cv2.resize(heat,(w,h))
+#     heat8=np.uint8(np.clip(heat*255,0,255))
+#     color=cv2.cvtColor(cv2.applyColorMap(heat8,cv2.COLORMAP_JET),cv2.COLOR_BGR2RGB)
+#     overlay=cv2.addWeighted(original,.6,color,.4,0)
+#     return heat,overlay
+
+# with st.sidebar:
+#     st.markdown("## 🩺 BreastCare AI")
+#     st.caption("Plateforme expérimentale d'imagerie mammaire")
+#     up_model=st.file_uploader("Importer modele_vgg16.keras",type=["keras"])
+#     if up_model is not None and st.session_state.get("model_name")!=up_model.name:
+#         tmp=tempfile.NamedTemporaryFile(delete=False,suffix=".keras")
+#         tmp.write(up_model.getvalue()); tmp.close()
+#         st.session_state.model_file=tmp.name
+#         st.session_state.model_name=up_model.name
+#     local_path=st.text_input("Ou chemin du modèle", "modele_vgg16.keras")
+#     path=st.session_state.model_file or (local_path if os.path.exists(local_path) else None)
+#     model=None
+#     if path:
+#         try: model=load_model(path); st.success("Modèle chargé")
+#         except Exception as e: st.error(f"Erreur de chargement : {e}")
+#     else: st.warning("Chargez le fichier .keras pour activer l'analyse.")
+#     st.markdown("---")
+#     st.markdown("### Navigation")
+#     for p,lab in [("Accueil","⌂ Accueil"),("Tableau de bord","▦ Tableau de bord"),("Analyse IA","✣ Analyse échographie"),("Patients","♙ Profils patients"),("Rapports","▤ Rapports"),("À propos","ⓘ À propos")]:
+#         if st.button(lab,use_container_width=True,key="nav_"+p):
+#             st.session_state.page=p
+#     st.markdown("---")
+#     st.markdown("### Classes du modèle")
+#     names_text=st.text_area("Noms dans l'ordre exact d'entraînement", "Classe 0\nClasse 1\nClasse 2")
+#     class_names=[s.strip() for s in names_text.splitlines() if s.strip()]
+#     if len(class_names)!=3:
+#         st.warning("Saisir exactement trois classes.")
+#         class_names=["Classe 0","Classe 1","Classe 2"]
+#     st.caption("Prototype académique — non validé pour le diagnostic.")
+
+# page=st.session_state.page
+# st.markdown("<div class='small'>BREAST IMAGING • DEEP LEARNING • CLINICAL WORKFLOW</div>",unsafe_allow_html=True)
+
+# if page=="Accueil":
+#     st.markdown("""
+#     <div class="hero">
+#       <div class="small">INTELLIGENCE ARTIFICIELLE • IMAGERIE MAMMAIRE</div>
+#       <h1>Une lecture augmentée<br>de l'imagerie du sein.</h1>
+#       <p>BreastCare AI associe classification d'images par VGG16 et visualisation Grad-CAM
+#       pour explorer les régions qui influencent les prédictions du modèle.</p>
+#       <span style="background:#1d4774;padding:8px 13px;border-radius:20px">VGG16 · 3 classes · Grad-CAM</span>
+#     </div>""",unsafe_allow_html=True)
+#     st.write("")
+#     a,b,c=st.columns(3)
+#     with a: st.markdown("<div class='card'><div class='small'>ESPACE PROFESSIONNEL</div><h3>👩‍⚕️ Médecin / Radiologue</h3><p class='muted'>Importer une image, examiner les scores et saisir son avis professionnel.</p></div>",unsafe_allow_html=True)
+#     with b: st.markdown("<div class='card'><div class='small'>DOSSIER PATIENT</div><h3>🧑‍🦰 Profil patient</h3><p class='muted'>Créer un profil anonymisé et retrouver les analyses enregistrées.</p></div>",unsafe_allow_html=True)
+#     with c: st.markdown("<div class='card'><div class='small'>EXPLICABILITÉ IA</div><h3>🔥 Grad-CAM</h3><p class='muted'>Visualiser les régions contribuant le plus au score de la classe choisie.</p></div>",unsafe_allow_html=True)
+#     st.write("")
+#     st.markdown("<div class='info'>Les résultats sont expérimentaux. Ils ne constituent pas un diagnostic et doivent être revus par un professionnel qualifié.</div>",unsafe_allow_html=True)
+
+# elif page=="Analyse IA":
+#     st.title("✣ Analyse intelligente d'une échographie")
+#     st.caption("Dossier patient · importation · classification · Grad-CAM · avis professionnel")
+#     if model is None: st.markdown("<div class='alert'>Chargez d'abord votre fichier modele_vgg16.keras dans la barre latérale.</div>",unsafe_allow_html=True)
+#     left,right=st.columns(2)
+#     with left:
+#         st.markdown("<div class='panel'>",unsafe_allow_html=True)
+#         st.subheader("1. Informations patient")
+#         pid=st.text_input("Identifiant patient *",placeholder="BC-2026-001")
+#         pname=st.text_input("Nom ou code anonymisé",placeholder="Patiente A.")
+#         age=st.number_input("Âge",0,120,35)
+#         exam_date=st.date_input("Date de l'examen",date.today())
+#         doctor=st.text_input("Médecin / opérateur")
+#         st.markdown("</div>",unsafe_allow_html=True)
+#     with right:
+#         st.markdown("<div class='panel'>",unsafe_allow_html=True)
+#         st.subheader("2. Image échographique")
+#         up=st.file_uploader("Importer PNG, JPG ou JPEG",type=["png","jpg","jpeg"])
+#         if up:
+#             pil=Image.open(up).convert("RGB")
+#             st.image(pil,caption="Image importée",use_container_width=True)
+#         st.markdown("</div>",unsafe_allow_html=True)
+#     if st.button("Lancer l'analyse expérimentale",type="primary",use_container_width=True,disabled=(model is None or up is None)):
+#         if not pid.strip(): st.error("Identifiant patient obligatoire.")
+#         else:
+#             try:
+#                 batch,original=prep(pil)
+#                 probs=model.predict(batch,verbose=0)[0]
+#                 idx=int(np.argmax(probs))
+#                 heat=gradcam(model,batch,idx)
+#                 heat,overlay=overlay_gradcam(original,heat)
+#                 st.session_state.last={"ID":pid.strip(),"Patient":pname or "Non renseigné","Âge":int(age),
+#                     "Date examen":str(exam_date),"Médecin":doctor or "Non renseigné",
+#                     "Classe modèle":class_names[idx],"Score modèle (%)":round(float(probs[idx])*100,2),
+#                     "probabilities":probs.tolist(),"image":original,"heatmap":heat,"overlay":overlay,
+#                     "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M")}
+#                 st.success("Analyse terminée.")
+#             except Exception as e: st.error(f"Erreur pendant l'analyse : {e}")
+#     r=st.session_state.last
+#     if r:
+#         st.markdown("---"); st.subheader("3. Résultats du modèle")
+#         x,y,z=st.columns(3)
+#         x.metric("Classe prédite",r["Classe modèle"]); y.metric("Score du modèle",f'{r["Score modèle (%)"]:.2f}%'); z.metric("Identifiant",r["ID"])
+#         st.markdown("<div class='alert'><b>Important :</b> le score est une sortie du modèle, pas une probabilité clinique validée ni un diagnostic.</div>",unsafe_allow_html=True)
+#         st.subheader("Probabilités par classe")
+#         st.bar_chart(pd.DataFrame({"Classe":class_names,"Score (%)":np.array(r["probabilities"])*100}).set_index("Classe"))
+#         st.subheader("4. Explicabilité Grad-CAM")
+#         i1,i2,i3=st.columns(3)
+#         i1.image(r["image"],caption="Image originale",use_container_width=True)
+#         i2.image(r["heatmap"],caption="Carte thermique",use_container_width=True,clamp=True)
+#         i3.image(r["overlay"],caption="Superposition Grad-CAM",use_container_width=True)
+#         st.subheader("5. Avis du professionnel")
+#         status=st.selectbox("Statut de revue",["En attente de revue médicale","À corréler avec l'examen clinique","Examen complémentaire à discuter","Avis documenté par le médecin"])
+#         note=st.text_area("Commentaire du médecin",placeholder="Saisie de l'observation clinique par le professionnel.")
+#         if st.button("Enregistrer le dossier"):
+#             rec={k:v for k,v in r.items() if k not in ["probabilities","image","heatmap","overlay"]}
+#             rec["Avis professionnel"]=status; rec["Commentaire"]=note
+#             st.session_state.records=[p for p in st.session_state.records if p["ID"]!=rec["ID"]]
+#             st.session_state.records.append(rec)
+#             st.success("Dossier enregistré dans la session.")
+
+# elif page=="Tableau de bord":
+#     st.title("▦ Tableau de bord hospitalier")
+#     df=pd.DataFrame(st.session_state.records)
+#     total=len(df); pending=int(df["Avis professionnel"].eq("En attente de revue médicale").sum()) if total else 0
+#     reviewed=total-pending; avg=df["Score modèle (%)"].mean() if total else 0
+#     a,b,c,d=st.columns(4)
+#     a.metric("Dossiers enregistrés",total); b.metric("Avis documentés",reviewed); c.metric("En attente",pending); d.metric("Score moyen IA",f"{avg:.1f}%" if total else "—")
+#     st.write("")
+#     if total:
+#         l,r=st.columns(2)
+#         with l: st.subheader("Classes prédites"); st.bar_chart(df["Classe modèle"].value_counts())
+#         with r: st.subheader("Statut des dossiers"); st.bar_chart(df["Avis professionnel"].value_counts())
+#         st.subheader("Derniers dossiers"); st.dataframe(df,use_container_width=True,hide_index=True)
+#         if pending: st.warning(f"{pending} dossier(s) attendent une revue professionnelle.")
+#     else: st.info("Aucun dossier enregistré. Réalisez une analyse puis enregistrez le compte rendu.")
+
+# elif page=="Patients":
+#     st.title("♙ Profils patients")
+#     with st.form("new_patient"):
+#         a,b=st.columns(2)
+#         with a: pid=st.text_input("Identifiant unique *"); name=st.text_input("Nom/code anonymisé"); age=st.number_input("Âge",0,120,30)
+#         with b: sex=st.selectbox("Sexe",["Femme","Homme","Autre / non renseigné"]); created=st.date_input("Date de création",date.today())
+#         submit=st.form_submit_button("Créer le profil")
+#         if submit:
+#             if not pid.strip(): st.error("Identifiant obligatoire.")
+#             elif any(x["ID"]==pid.strip() for x in st.session_state.records): st.error("Identifiant déjà présent.")
+#             else:
+#                 st.session_state.records.append({"ID":pid.strip(),"Patient":name or "Non renseigné","Âge":int(age),"Sexe":sex,"Date création":str(created),"Classe modèle":"Aucune analyse","Score modèle (%)":np.nan,"Avis professionnel":"Profil créé — analyse en attente","Commentaire":"","Horodatage":datetime.now().strftime("%Y-%m-%d %H:%M")})
+#                 st.success("Profil créé.")
+#     df=pd.DataFrame(st.session_state.records)
+#     if len(df):
+#         st.subheader("Registre des patients"); st.dataframe(df,use_container_width=True,hide_index=True)
+#         chosen=st.selectbox("Ouvrir un dossier",df["ID"].tolist())
+#         row=df[df["ID"]==chosen].iloc[-1]
+#         st.markdown("<div class='panel'>",unsafe_allow_html=True)
+#         st.subheader(f"Dossier {chosen}")
+#         st.write("Patient :",row.get("Patient","—"),"| Âge :",row.get("Âge","—"))
+#         st.write("Classe modèle :",row.get("Classe modèle","—"))
+#         st.write("Avis professionnel :",row.get("Avis professionnel","—"))
+#         st.write("Commentaire :",row.get("Commentaire","—"))
+#         st.markdown("</div>",unsafe_allow_html=True)
+#     else: st.info("Aucun profil. Créez un profil ou enregistrez une analyse.")
+
+# elif page=="Rapports":
+#     st.title("▤ Rapports et export")
+#     df=pd.DataFrame(st.session_state.records)
+#     if len(df):
+#         st.dataframe(df,use_container_width=True,hide_index=True)
+#         st.download_button("⬇ Télécharger les dossiers CSV",df.to_csv(index=False).encode("utf-8-sig"),"breastcare_patients.csv","text/csv",use_container_width=True)
+#     else: st.info("Aucun dossier à exporter.")
+
+# elif page=="À propos":
+#     st.title("ⓘ À propos de BreastCare AI")
+#     st.markdown("""
+#     <div class='panel'>
+#     <h3>Technologies</h3><p>Python · TensorFlow/Keras · VGG16 · OpenCV · Streamlit · Grad-CAM</p>
+#     <h3>Objectif</h3><p>Prototype académique de classification d'images échographiques et d'explicabilité visuelle.</p>
+#     <h3>Limites et sécurité</h3>
+#     <ul>
+#     <li>Les scores du modèle ne sont pas des probabilités cliniques validées.</li>
+#     <li>Grad-CAM est une explication approximative, pas une preuve de localisation d'une lésion.</li>
+#     <li>Ne pas utiliser pour diagnostiquer, trier ou traiter une patiente.</li>
+#     <li>Validation clinique, réglementaire, cybersécurité et protection des données indispensables avant tout usage réel.</li>
+#     <li>Les dossiers restent dans la session Streamlit et ne sont pas une base de données hospitalière sécurisée.</li>
+#     </ul></div>""",unsafe_allow_html=True)
+
+# st.markdown("---")
+# st.markdown("<p style='text-align:center;color:#8192a8;font-size:12px'>BREASTCARE AI · Prototype académique · VGG16 + Grad-CAM</p>",unsafe_allow_html=True)
+# Fin 
+# Fin conserver
+
 import os
 import base64
 import html as html_lib
@@ -458,6 +713,204 @@ def show_vega(spec):
         st.vega_lite_chart(spec=spec, **FIT)
     except TypeError:
         st.vega_lite_chart(spec=spec, use_container_width=True)
+
+
+# ============================================================
+# PROFIL — DONNEES (modifiez uniquement ce bloc)
+# ============================================================
+
+PROFILE = {
+    "name": "Prénom NOM",
+    "title": "Ingénieur IA · Data Science & Imagerie médicale",
+    "tagline": "Je conçois des solutions d'intelligence artificielle "
+               "au service de la santé.",
+    "email": "votre.email@exemple.com",
+    "phone": "+221 00 000 00 00",
+    "location": "Ville, Pays",
+    "linkedin": "https://linkedin.com/in/votre-profil",
+    "github": "https://github.com/votre-profil",
+    # Lien public de votre CV / portfolio. S'il est vide, le QR code
+    # contient une carte de contact (vCard) lisible par tout smartphone.
+    "cv_url": "",
+    "summary": "Passionné par l'IA appliquée à la santé, je développe "
+               "des modèles de Deep Learning (CNN, VGG16, Grad-CAM) "
+               "et des applications Streamlit prêtes à l'emploi.",
+    "skills": ["Python", "TensorFlow / Keras", "Deep Learning", "CNN · VGG16",
+               "Grad-CAM", "OpenCV", "Pandas · NumPy", "Streamlit"],
+    "languages": [("Français", 95), ("Anglais", 70), ("Wolof", 90)],
+    "experience": [
+        ("2026", "BreastCare AI — Projet de recherche",
+         "Classification d'images échographiques mammaires "
+         "(VGG16, 3 classes) avec explicabilité Grad-CAM."),
+        ("2025", "Votre poste / stage",
+         "Décrivez ici une mission et son résultat chiffré."),
+    ],
+    "education": [
+        ("2026", "Votre diplôme", "Votre établissement"),
+    ],
+}
+
+PHOTO_PATH = BASE_DIR / "profile_photo.jpg"
+
+
+@st.cache_data
+def photo_data_uri(path):
+    path = Path(path)
+    if not path.exists():
+        return ""
+    return "data:image/jpeg;base64," + base64.b64encode(
+        path.read_bytes()
+    ).decode("utf-8")
+
+
+def qr_payload():
+    if PROFILE["cv_url"].strip():
+        return PROFILE["cv_url"].strip()
+    return (
+        "BEGIN:VCARD\nVERSION:3.0\n"
+        f"FN:{PROFILE['name']}\nTITLE:{PROFILE['title']}\n"
+        f"TEL:{PROFILE['phone']}\nEMAIL:{PROFILE['email']}\n"
+        f"URL:{PROFILE['linkedin']}\nNOTE:{PROFILE['summary']}\n"
+        "END:VCARD"
+    )
+
+
+@st.cache_data
+def make_qr_png(payload):
+    import io
+    import qrcode
+    qr = qrcode.QRCode(
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10, border=2
+    )
+    qr.add_data(payload)
+    qr.make(fit=True)
+    img = qr.make_image(
+        fill_color="#082B49", back_color="white"
+    ).convert("RGB")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def build_cv_html(qr_png):
+    e = html_lib.escape
+    qr_b64 = base64.b64encode(qr_png).decode()
+    photo = photo_data_uri(PHOTO_PATH)
+    skills = "".join(f"<span class='chip'>{e(s)}</span>"
+                     for s in PROFILE["skills"])
+    langs = "".join(
+        f"<div class='lg'><span>{e(n)}</span>"
+        f"<div class='bar'><i style='width:{p}%'></i></div></div>"
+        for n, p in PROFILE["languages"])
+    exp = "".join(
+        f"<div class='it'><b>{e(y)}</b><div><h4>{e(t)}</h4>"
+        f"<p>{e(d)}</p></div></div>"
+        for y, t, d in PROFILE["experience"])
+    edu = "".join(
+        f"<div class='it'><b>{e(y)}</b><div><h4>{e(t)}</h4>"
+        f"<p>{e(d)}</p></div></div>"
+        for y, t, d in PROFILE["education"])
+    return f"""<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<title>CV — {e(PROFILE['name'])}</title>
+<style>
+*{{box-sizing:border-box}}body{{margin:0;background:#EAF4FC;
+font-family:'Segoe UI',Arial,sans-serif;color:#103B60}}
+.page{{max-width:900px;margin:24px auto;background:#fff;border-radius:18px;
+overflow:hidden;box-shadow:0 20px 50px rgba(8,43,73,.2);display:flex}}
+.side{{width:300px;background:linear-gradient(180deg,#061F38,#0A3A63);
+color:#fff;padding:34px 26px;text-align:center}}
+.side img.ph{{width:150px;height:150px;border-radius:50%;object-fit:cover;
+border:4px solid #D5AE61}}
+.side h1{{font-size:22px;margin:16px 0 4px}}
+.side .t{{color:#D5AE61;font-size:12px;letter-spacing:1px;font-weight:700}}
+.side h3{{color:#D5AE61;font-size:12px;letter-spacing:2px;text-align:left;
+margin:26px 0 8px;border-bottom:1px solid #31536F;padding-bottom:6px}}
+.side p{{font-size:13px;text-align:left;margin:6px 0;color:#D2E6F5;
+word-break:break-all}}
+.qr{{background:#fff;border-radius:12px;padding:8px;margin-top:22px}}
+.qr img{{width:100%}}.qr small{{color:#082B49;font-weight:700;font-size:11px}}
+.main{{flex:1;padding:34px 36px}}
+.main h2{{font-size:13px;letter-spacing:2px;color:#1769AA;
+border-bottom:2px solid #D5AE61;padding-bottom:6px;margin:0 0 14px}}
+.sec{{margin-bottom:26px}}.sum{{font-size:14px;line-height:1.7}}
+.chip{{display:inline-block;background:#EAF4FC;border:1px solid #DCE8F4;
+color:#082B49;border-radius:20px;padding:6px 12px;margin:3px;
+font-size:12.5px;font-weight:700}}
+.it{{display:flex;gap:16px;margin-bottom:14px}}
+.it b{{color:#D5AE61;min-width:46px}}.it h4{{margin:0 0 4px;color:#082B49}}
+.it p{{margin:0;font-size:13px;color:#61758B;line-height:1.5}}
+.lg{{font-size:13px;margin-bottom:8px;text-align:left}}
+.bar{{height:6px;background:#31536F;border-radius:6px;margin-top:4px}}
+.bar i{{display:block;height:100%;background:#D5AE61;border-radius:6px}}
+@media print{{body{{background:#fff}}.page{{box-shadow:none;margin:0}}}}
+</style></head><body><div class="page">
+<div class="side"><img class="ph" src="{photo}">
+<h1>{e(PROFILE['name'])}</h1><div class="t">{e(PROFILE['title'])}</div>
+<h3>CONTACT</h3><p>✉ {e(PROFILE['email'])}</p><p>☎ {e(PROFILE['phone'])}</p>
+<p>⌖ {e(PROFILE['location'])}</p><p>in {e(PROFILE['linkedin'])}</p>
+<p>⌨ {e(PROFILE['github'])}</p><h3>LANGUES</h3>{langs}
+<div class="qr"><img src="data:image/png;base64,{qr_b64}">
+<small>Scannez pour enregistrer mon contact</small></div></div>
+<div class="main"><div class="sec"><h2>PROFIL</h2>
+<p class="sum">{e(PROFILE['summary'])}</p></div>
+<div class="sec"><h2>COMPÉTENCES</h2>{skills}</div>
+<div class="sec"><h2>EXPÉRIENCE &amp; PROJETS</h2>{exp}</div>
+<div class="sec"><h2>FORMATION</h2>{edu}</div></div></div></body></html>"""
+
+
+PROFILE_CSS = """
+<style>
+.topbar-profile{flex:0 0 auto;width:74px;height:74px;border-radius:50%;
+ border:3px solid #D5AE61;background-size:cover;background-position:center;
+ box-shadow:0 0 0 4px rgba(213,174,97,.2),0 6px 18px rgba(0,0,0,.35)}
+.pf-hero{position:relative;overflow:hidden;border-radius:24px;
+ padding:44px 40px;display:flex;align-items:center;gap:36px;flex-wrap:wrap;
+ background:linear-gradient(115deg,#061F38,#0A3A63 55%,#1769AA);
+ border:1px solid rgba(213,174,97,.6);
+ box-shadow:0 22px 50px rgba(8,43,73,.28)}
+.pf-hero::after{content:"";position:absolute;right:-80px;top:-80px;
+ width:300px;height:300px;border-radius:50%;
+ background:radial-gradient(circle,rgba(213,174,97,.28),transparent 70%)}
+.pf-photo{width:190px;height:190px;border-radius:50%;flex:0 0 auto;
+ background-size:cover;background-position:center;border:5px solid #D5AE61;
+ box-shadow:0 0 0 10px rgba(255,255,255,.08),0 14px 34px rgba(0,0,0,.4);
+ z-index:1}
+.pf-info{z-index:1;flex:1;min-width:260px}
+.pf-kicker{color:#D5AE61;font-size:11px;font-weight:800;letter-spacing:2.4px}
+.pf-hero h1{color:#fff!important;font-size:44px;margin:8px 0 6px}
+.pf-title{color:#D2E6F5;font-size:18px;font-weight:600}
+.pf-tag{color:#EAF4FC;opacity:.85;margin-top:12px;max-width:560px;
+ line-height:1.6}
+.pf-contacts{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.pf-pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);
+ color:#fff;border-radius:30px;padding:8px 16px;font-size:13px;font-weight:600}
+.pf-card{background:#fff;border:1px solid #DCE8F4;border-radius:18px;
+ padding:24px 26px;box-shadow:0 10px 30px rgba(10,48,80,.08);height:100%}
+.pf-card h3{font-size:13px!important;letter-spacing:2px;color:#1769AA!important;
+ border-bottom:2px solid #D5AE61;padding-bottom:8px;margin-bottom:14px}
+.pf-chip{display:inline-block;background:#EAF4FC;border:1px solid #DCE8F4;
+ color:#082B49;border-radius:20px;padding:7px 14px;margin:4px 4px 0 0;
+ font-weight:700;font-size:13px;transition:all .2s}
+.pf-chip:hover{background:#082B49;color:#fff;transform:translateY(-2px)}
+.pf-item{display:flex;gap:16px;margin-bottom:16px}
+.pf-year{color:#fff;background:linear-gradient(135deg,#082B49,#1769AA);
+ border-radius:10px;padding:6px 10px;font-weight:800;font-size:13px;
+ height:fit-content}
+.pf-item h4{margin:0;color:#082B49}.pf-item p{margin:4px 0 0;color:#61758B;
+ font-size:14px;line-height:1.5}
+.pf-lang{margin-bottom:12px;font-weight:700;font-size:14px}
+.pf-bar{height:8px;background:#DCE8F4;border-radius:8px;margin-top:5px}
+.pf-bar i{display:block;height:100%;border-radius:8px;
+ background:linear-gradient(90deg,#1769AA,#D5AE61)}
+.pf-scan{background:linear-gradient(160deg,#061F38,#0A3A63);color:#fff;
+ border-radius:18px;padding:26px;text-align:center;
+ border:1px solid rgba(213,174,97,.6)}
+.pf-scan h3{color:#D5AE61!important;font-size:13px!important;
+ letter-spacing:2px}
+.pf-scan p{color:#D2E6F5;font-size:13px}
+</style>
+"""
 
 
 # ============================================================
@@ -1037,6 +1490,8 @@ header[data-testid="stHeader"] { background: transparent; }
 if st.session_state.get("navigation", "Accueil") == "Accueil":
     st.markdown(HOME_CSS, unsafe_allow_html=True)
 
+st.markdown(PROFILE_CSS, unsafe_allow_html=True)
+
 
 # ============================================================
 # 4. SESSION STATE
@@ -1325,7 +1780,8 @@ pages = [
     "Analyse IA",
     "Patients",
     "Rapports",
-    "À propos"
+    "À propos",
+    "Profil"
 ]
 
 PAGE_LABELS = {
@@ -1334,7 +1790,8 @@ PAGE_LABELS = {
     "Analyse IA": "Analyse IA",
     "Patients": "Les patients",
     "Rapports": "Rapports",
-    "À propos": "À propos de"
+    "À propos": "À propos de",
+    "Profil": "👤 Profil"
 }
 
 render("""
@@ -1349,7 +1806,7 @@ render("""
                 <circle cx="20" cy="12" r="2" stroke="#4FC3F7"/>
                 <path d="M5 3h2M13 3h2"/>
             </svg>
-            BreastCare AI
+            IA SOINS DU SEIN
         </div>
         <div class="topbar-sub">
             INTELLIGENCE ARTIFICIELLE · SANTÉ · IMAGERIE MAMMAIRE
@@ -1359,8 +1816,9 @@ render("""
         </div>
     </div>
     <div class="topbar-photo"></div>
+    <div class="topbar-profile" style="background-image:url('{photo_data_uri(PHOTO_PATH)}')"></div>
 </div>
-""")
+""".replace("{photo_data_uri(PHOTO_PATH)}", photo_data_uri(PHOTO_PATH)))
 
 selected_page = st.radio(
     "Navigation",
@@ -2394,6 +2852,84 @@ elif page == "Rapports":
 # 15. PAGE A PROPOS
 # ============================================================
 
+elif page == "Profil":
+
+    e = html_lib.escape
+    photo = photo_data_uri(PHOTO_PATH)
+
+    render(f"""
+    <div class="pf-hero">
+        <div class="pf-photo" style="background-image:url('{photo}')"></div>
+        <div class="pf-info">
+            <div class="pf-kicker">PROFIL PROFESSIONNEL</div>
+            <h1>{e(PROFILE['name'])}</h1>
+            <div class="pf-title">{e(PROFILE['title'])}</div>
+            <div class="pf-tag">{e(PROFILE['tagline'])}</div>
+            <div class="pf-contacts">
+                <span class="pf-pill">✉ {e(PROFILE['email'])}</span>
+                <span class="pf-pill">☎ {e(PROFILE['phone'])}</span>
+                <span class="pf-pill">⌖ {e(PROFILE['location'])}</span>
+            </div>
+        </div>
+    </div>
+    """)
+
+    st.write("")
+    left, right = st.columns([2, 1])
+
+    with left:
+        chips = "".join(
+            f"<span class='pf-chip'>{e(x)}</span>"
+            for x in PROFILE["skills"]
+        )
+        exp = "".join(
+            f"<div class='pf-item'><div class='pf-year'>{e(y)}</div>"
+            f"<div><h4>{e(t)}</h4><p>{e(d)}</p></div></div>"
+            for y, t, d in PROFILE["experience"]
+        )
+        edu = "".join(
+            f"<div class='pf-item'><div class='pf-year'>{e(y)}</div>"
+            f"<div><h4>{e(t)}</h4><p>{e(d)}</p></div></div>"
+            for y, t, d in PROFILE["education"]
+        )
+        render(f"""
+        <div class="pf-card"><h3>À PROPOS</h3>
+        <p style="line-height:1.7">{e(PROFILE['summary'])}</p></div>
+        """)
+        st.write("")
+        render(f'<div class="pf-card"><h3>COMPÉTENCES</h3>{chips}</div>')
+        st.write("")
+        render(f'<div class="pf-card"><h3>EXPÉRIENCE & PROJETS</h3>{exp}</div>')
+        st.write("")
+        render(f'<div class="pf-card"><h3>FORMATION</h3>{edu}</div>')
+
+    with right:
+        qr_png = make_qr_png(qr_payload())
+        render("""<div class="pf-scan"><h3>SCANNER MON CV</h3>
+        <p>Les recruteurs scannent ce code avec leur téléphone.</p></div>""")
+        st.image(qr_png, **FIT)
+        st.caption(
+            "Lien CV public" if PROFILE["cv_url"].strip()
+            else "Carte de contact (vCard) — ajoutée en un geste"
+        )
+        langs = "".join(
+            f"<div class='pf-lang'>{e(n)}<div class='pf-bar'>"
+            f"<i style='width:{p}%'></i></div></div>"
+            for n, p in PROFILE["languages"]
+        )
+        st.write("")
+        render(f'<div class="pf-card"><h3>LANGUES</h3>{langs}</div>')
+        st.write("")
+        st.download_button(
+            "⬇ Télécharger mon CV (HTML / PDF)",
+            data=build_cv_html(qr_png).encode("utf-8"),
+            file_name="CV_profil.html",
+            mime="text/html",
+            **FIT
+        )
+        st.caption("Ouvrez le fichier puis Imprimer → Enregistrer en PDF.")
+
+
 elif page == "À propos":
 
     st.title(
@@ -2469,7 +3005,7 @@ render("""
 <div class="footer">
 
     <div style="font-size:26px;font-weight:800;color:white;">
-        🩺 BreastCare AI
+        🩺 IA SOINS DU SEIN
     </div>
 
     <div style="color:#D5AE61;font-size:11px;
