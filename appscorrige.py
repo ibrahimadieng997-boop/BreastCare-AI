@@ -1349,7 +1349,7 @@ render("""
                 <circle cx="20" cy="12" r="2" stroke="#4FC3F7"/>
                 <path d="M5 3h2M13 3h2"/>
             </svg>
-            IA SOINS DU SEIN
+            BreastCare AI
         </div>
         <div class="topbar-sub">
             INTELLIGENCE ARTIFICIELLE · SANTÉ · IMAGERIE MAMMAIRE
@@ -2469,7 +2469,7 @@ render("""
 <div class="footer">
 
     <div style="font-size:26px;font-weight:800;color:white;">
-        🩺 IA SOINS DU SEIN
+        🩺 BreastCare AI
     </div>
 
     <div style="color:#D5AE61;font-size:11px;
