@@ -3068,7 +3068,7 @@ render("""
 <div class="footer">
 
     <div style="font-size:26px;font-weight:800;color:white;">
-        🩺 IA SOINS DU SEIN
+        🩺 BreastCare AI  
     </div>
 
     <div style="color:#D5AE61;font-size:11px;
